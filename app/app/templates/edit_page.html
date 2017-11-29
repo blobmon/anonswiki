@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+	<meta name='viewport' content='width=device-width, initial-scale=1' />
+	{%if page.create == 0 %}
+	<title>Edit Page - {{page.page_name}}</title>
+	{% elif page.create == 1 %}
+	<title>Create Page</title>
+	{% endif %}
+
+	<style type='text/css'>
+		body{font-family : monospace; color: rgb(30,30,30); font-size:12px;}
+		#bigdiv{width:80%; background-color:rgb(245,245,245); margin:0px auto; padding:5px 10px; }
+		#create_page_header{font-size:16px}
+		.haze{color:rgb(130,130,130)}
+
+		#textarea_content{width:90%; min-height:400px;}
+
+		a{text-decoration:none;}
+
+		/* media queries */
+		@media only screen and (max-width: 480px) {			
+			#bigdiv{width: 98%; padding:5px 2px}
+			#textarea_content{width:96%; }
+
+		}
+
+		.red {color:red;}
+		.green{color: green;}
+	</style>
+
+<script type='text/javascript'>
+
+function init(){
+  var form = document.forms[0]
+  
+  var submit_button = form.submit_button
+  var page_name_input = form.page_name
+  var content_input = form.content
+  
+  var editor_name_input = form.editor_name
+
+  var create_input = form.create
+  var version_edited_input = form.version_edited
+  var force_input = form.force
+
+  submit_button.onclick = function(evnt) {
+    evnt.preventDefault()
+    
+    var page_name = page_name_input.value.trim() 
+    var content = content_input.value
+    var editor_name = editor_name_input.value 
+
+    var create = create_input.value
+
+    var force = ''
+    var version_edited = '0'
+
+    if (create === '0') {
+      force = force_input.checked
+      version_edited = version_edited_input.value
+    }
+    if ( page_name.length == 0 ) {
+      set_status('page name is empty', 'red'); return;
+    }
+
+    var form_data = new FormData()
+    form_data.append('page_name', page_name)
+    form_data.append('content', content)
+    form_data.append('editor_name', editor_name)
+    form_data.append('create', create)
+
+    if (create == '0') {
+    form_data.append('force', force)
+    form_data.append('version_edited', version_edited)
+    }
+
+    //all good now we send
+    submit_button.disabled = true
+    var on_ok = function(d){
+      var json = JSON.parse(d)
+      var redirect_url = json.redirect_url
+      set_status('success! redirecting...', 'green')
+
+      var redirect_call = function(){			
+        window.location = redirect_url
+      }
+      setTimeout(redirect_call, 1500)
+
+    }
+
+    var on_fail = function(s,d){
+      if (s == 400 || s == 500) { set_status('Error ' + ': ' + d, 'red') }
+      else if (s == 413) {set_status('Error : big input', 'red')}
+      else {set_status('Error while submitting.', 'red')}
+      submit_button.disabled = false
+    }
+
+    send_form(form_data, '/edit_page/', on_ok, null, on_fail)
+        
+
+  } 
+}
+
+
+document.addEventListener("DOMContentLoaded", init);
+
+function set_status(msg, claz) {
+  var s = document.getElementById('status_txt');
+  s.innerHTML = msg
+  s.className = claz
+}
+
+// util functions
+function send_form(form_data, endpoint, on_ok, on_progress, on_fail) {
+  var xhr = new XMLHttpRequest();
+  if(on_progress != null) { xhr.upload.addEventListener('progress', on_progress) }
+	
+  xhr.open('POST', endpoint );
+  xhr.onreadystatechange = function() {
+    if(xhr.readyState === 4 ) {
+      if(xhr.status == 200 ) {
+        on_ok(xhr.responseText);
+      }
+      else {				
+      console.log('failed with status : ' + xhr.status + ' and readyState : ' + xhr.readyState);
+      on_fail(xhr.status, xhr.responseText)
+      }
+    }
+  }
+
+  xhr.send(form_data);
+}
+
+// trim polyfill
+if (!String.prototype.trim) {
+  String.prototype.trim = function () {
+    return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+  };
+}
+
+</script>
+	
+
+
+</head>
+
+<body>
+
+<div id='bigdiv'>
+<form name='edit_form' method='post' action='/edit_page/'>
+
+{%if page.create == 0 %} 
+<a href='/{{page.page_name}}/?v={{page.version}}'>{{page.page_name}}</a> <span class='haze'>editing version {{page.version_text}}</span><br><br>
+<input type='hidden' name='page_name' value='{{page.page_name}}' />
+<input type='hidden' name='version_edited' value='{{page.version}}' />
+{% else %}
+<h3 id='create_page_header'>Create Page : </h3>
+Page Name : <br>
+<input type='text' name='page_name' /> <br><br>
+{% endif %}
+<input type='hidden' name='create' value='{{page.create}}' />
+Content : <br>
+<textarea name='content' wrap='soft' id='textarea_content'>{{page.content | safe}}</textarea> <br><br>
+
+Name (optional) : <br>
+<input type='text' name='editor_name' placeholder='Anonymous' /> <br><br>
+
+<input type='submit' value='Submit' name='submit_button' />
+{%if page.create == 0 %}
+<input type='checkbox' value='force' name='force' />force? <br>
+{%endif %}
+<p id='status_txt'></p>
+</form>
+
+</div>
+</body>
+
+</html>

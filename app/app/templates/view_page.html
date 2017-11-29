@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<meta name='viewport' content='width=device-width, initial-scale=1' />
+
+<title>View Page - {{page.page_name}}</title>
+
+<style type='text/css'>
+	body{font-family : monospace; color: rgb(30,30,30); font-size:12px;}
+	#bigdiv {width:80%; background-color:rgb(245,245,245); margin:0px auto; padding:5px 10px;}
+	#content_before_box{display:inline-block; font-size:12px;}
+	.big_guy{font-size: 18px; word-break:break-all; display:inline; font-weight:normal;}
+	#page_info{font-size:12px; color:rgb(130,130,130)}
+
+	a{text-decoration:none;}
+	hr{border:none; border-top:1px solid}
+
+	/* media queries */
+	@media only screen and (max-width: 480px) {
+		#bigdiv{width: 98%; padding:5px 2px}
+	}
+
+	#content_box{white-space: pre-wrap; word-wrap:break-word; font-size:13px;}
+	.trip{color:darkGreen; font-weight:normal}
+</style>
+
+
+
+</head>
+
+<body>
+<div id='bigdiv'>
+
+<div id='content_before_box'>
+	<h1 class='big_guy'><a href='/' >/</a><a href='/{{page.page_name}}/backlinks/'>{{page.page_name}}</a></h1>&emsp;<a href='/{{page.page_name}}/edit/?v={{page.version}}'>edit</a>
+<br><br>
+<div id='page_info'>
+	viewing <a href='/{{page.page_name}}/version_history/'>version</a> : {{page.version_text}}
+	<br>
+	version created {{page.created_before}} ago by {{page.editor_name | safe}}
+	<br>
+	last viewed {{page.view_before}} ago
+	<br>
+	lines : {{page.line_count}}
+	<hr>
+</div>
+
+</div> <!-- content before box end -->
+
+<br><br>
+<div id='content_box'>{{page.content | safe}}</div>
+
+</div> 
+</body>
+</html>
