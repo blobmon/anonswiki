@@ -100,10 +100,7 @@ AS
 $$
 DECLARE
   v_page_row page%ROWTYPE;
-BEGIN
-
-
-  -- select FOR UPDATE pages which are not viewed in last 180 days and delete EVERYTHING associated with that page
+BEGIN  
   -- thanks to delete cascade, we need not worry about deleting rows in pages_store and inter_page_links
   DELETE FROM page WHERE recent_view_ts < now() - INTERVAL'100days';
 
@@ -113,16 +110,12 @@ BEGIN
   -- select and delete pages which have no pages_store (delete inter_page_links first)
   DELETE FROM page WHERE NOT EXISTS (SELECT 1 FROM pages_store WHERE page.page_name = pages_store.page_name);
 
-  --FOR v_page_row IN SELECT * FROM page WHERE recent_view_ts < now() - INTERVAL'180days'
-  --LOOP
-    --DELETE FROM pages_store WHERE page_name=v_page_row.page_name;
-    --DELETE FROM inter_page_links WHERE page_name_src=v_page_row.page_name;
-    --DELETE FROM page WHERE page_name=v_page_row.page_name;
-  --END LOOP;
+  
+  -- write empty user_id for edits which are > 1 hour to keep things safe for every user
+  UPDATE pages_store SET (editor_id)=('') WHERE creation_ts < now() - INTERVAL '1 hour' AND char_length('editor_id') > 0;
 
-
-  -- delete old user activity next ( which are > 10 days )
-  DELETE FROM user_activity WHERE ts < now() - INTERVAL'10 days';
+  -- delete old user activity next ( which are > 1 day )
+  DELETE FROM user_activity WHERE ts < now() - INTERVAL'1 day';
 
   out_status = 1; 
      

@@ -7,15 +7,19 @@ app.config.from_pyfile('appconfig.cfg')
 from flask import request, render_template, redirect, url_for
 from handler import Handler
 
-import uwsgi
-import cleaner_crontask
+try:
+    import uwsgi
+    import cleaner_crontask
+    #the cleaner cron setup
+    def cleaner_cron(signum) :
+        cleaner_crontask.run()
 
-#the cleaner cron setup
-def cleaner_cron(signum) :
-    cleaner_crontask.run()
+    uwsgi.register_signal(108, "", cleaner_cron)
+    uwsgi.add_cron(108,0,-1,-1,-1,-1)
 
-uwsgi.register_signal(108, "", cleaner_cron)
-uwsgi.add_cron(108,0,-1,-1,-1,-1)
+except ImportError:
+    print 'starting without uwsgi'
+
 
 @app.route('/')
 def home():
@@ -61,6 +65,11 @@ def recent_edits() :
 def search_page() :
     handler = Handler()
     return handler.search_page()
+
+@app.route('/random_page/', methods=['GET'])
+def random_page() :
+    handler = Handler()
+    return handler.random_page()
 
 ##################################
 @app.errorhandler(404)

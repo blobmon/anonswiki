@@ -11,7 +11,7 @@ import re
 from app import app
 
 
-from flask import render_template, jsonify, request
+from flask import render_template, jsonify, request, redirect, url_for
 import base64, hashlib
 
 class Handler:
@@ -237,6 +237,17 @@ class Handler:
         return render_template('search_page.html', query=request.args['q'], search_status='search results : ', search_results='<br>'.join(html_lines) )
 
 
+    def random_page(self) :
+        cur = self.con.cursor()
+        cur.execute("SELECT * from page ORDER BY random() LIMIT 1")
+
+        res = cur.fetchall()
+
+        random_page = res[0][0]
+
+        return redirect('/{}/'.format(random_page) )
+
+
 
     def create_page_render(self) :
         #this method doesn't want db so is it necessary to connect to db?
@@ -330,7 +341,7 @@ class Handler:
         if not re.match('^[\w\d_]+$', page_name) :
             return 'page name can only contain a-z 0-9 and _ characters', 400 
 
-        restricted_page_names = ('create_page', 'recent_edits', 'search_page', 'edit_page', 'donate', 'deletion_logs', 'moderator_area')
+        restricted_page_names = ('create_page', 'recent_edits', 'search_page', 'edit_page', 'donate', 'deletion_logs', 'moderator_area', 'random_page')
 
         if page_name in restricted_page_names :
             return 'page name not allowed', 400
