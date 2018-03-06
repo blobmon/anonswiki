@@ -477,7 +477,9 @@ class Handler:
         if len(trip_str) == 0 :
             return u'<strong>{}</strong>'.format( Handler.html_escape(name) )
         else :
-            strr = app.config['TRIP_HASH_STR'].format(trip_str)
+            trip_hash_str = unicode(app.config['TRIP_HASH_STR'], "utf-8" )            
+            strr = trip_hash_str.format(trip_str)
+            strr = strr.encode('utf8')
             sha256 = hashlib.sha256()
             sha256.update(strr)
             trip =  base64.b64encode(sha256.digest())[:8]
